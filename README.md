@@ -29,3 +29,5 @@ Tools: Maven, Git, Postman
 🎯 Objective
 
 Built to showcase expertise in Java backend development, REST API design, and end-to-end application development.
+<img width="643" height="842" alt="ProjectStructure" src="https://github.com/user-attachments/assets/57c2729a-f0c2-4b2f-9e2b-485249d6fa9d" />
+
