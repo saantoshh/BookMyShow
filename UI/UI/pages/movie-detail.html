@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Movie — BookMyShow</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ── TOKENS ─────────────────────────────────────────────── */
+    :root {
+      --bg:        #0a0a0c;
+      --bg2:       #111116;
+      --bg3:       #18181f;
+      --border:    rgba(255,255,255,0.07);
+      --gold:      #e8b84b;
+      --gold2:     #f5d07a;
+      --red:       #e84b4b;
+      --text:      #f0eeea;
+      --muted:     #7a7880;
+      --pill-bg:   rgba(232,184,75,0.12);
+      --radius:    14px;
+      --radius-sm: 8px;
+      --shadow:    0 24px 60px rgba(0,0,0,0.6);
+    }
+
+    /* ── RESET ──────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* grain overlay */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 0;
+    }
+
+    /* ── NAV ────────────────────────────────────────────────── */
+    .navbar {
+      position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; gap: 2rem;
+      padding: 0 clamp(1.5rem, 5vw, 4rem);
+      height: 64px;
+      background: rgba(10,10,12,0.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+    }
+    .logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.6rem;
+      letter-spacing: 1px;
+      color: var(--text);
+      text-decoration: none;
+    }
+    .logo span { color: var(--gold); }
+    .nav-links { display: flex; gap: 1.5rem; margin-left: auto; }
+    .nav-links a {
+      text-decoration: none; font-size: 0.85rem; font-weight: 500;
+      color: var(--muted); transition: color 0.2s;
+      letter-spacing: 0.02em;
+    }
+    .nav-links a:hover, .nav-links a.active { color: var(--text); }
+    .nav-links a.active { border-bottom: 2px solid var(--gold); padding-bottom: 2px; }
+    #nav-user { font-size: 0.85rem; color: var(--muted); }
+
+    /* ── HERO BAND ──────────────────────────────────────────── */
+    #movie-hero {
+      position: relative;
+      background: linear-gradient(160deg, #14131a 0%, #0a0a0c 60%);
+      padding: clamp(2.5rem, 5vw, 4.5rem) clamp(1.5rem, 6vw, 6rem);
+      overflow: hidden;
+    }
+    #movie-hero::after {
+      content: '';
+      position: absolute; top: 0; right: 0;
+      width: 50%; height: 100%;
+      background: radial-gradient(ellipse at 80% 30%, rgba(232,184,75,0.06), transparent 60%);
+      pointer-events: none;
+    }
+    .hero-inner {
+      position: relative; z-index: 1;
+      display: flex; gap: clamp(1.5rem, 4vw, 3.5rem);
+      align-items: flex-start; flex-wrap: wrap;
+      max-width: 1100px;
+    }
+    .poster-wrap {
+      flex-shrink: 0;
+      width: clamp(140px, 22vw, 220px);
+      aspect-ratio: 2/3;
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.7), 0 0 0 1px var(--border);
+      background: var(--bg3);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .poster-wrap img { width: 100%; height: 100%; object-fit: cover; }
+    .movie-meta { flex: 1; min-width: 260px; }
+    .movie-meta h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(2.2rem, 5vw, 3.8rem);
+      line-height: 1;
+      letter-spacing: 1px;
+      color: var(--text);
+      margin-bottom: 1rem;
+    }
+    .badge-row { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.2rem; }
+    .badge {
+      display: inline-flex; align-items: center; gap: 0.3rem;
+      padding: 0.25rem 0.75rem;
+      border-radius: 999px;
+      font-size: 0.78rem; font-weight: 600;
+      letter-spacing: 0.05em; text-transform: uppercase;
+    }
+    .b-genre  { background: var(--pill-bg); color: var(--gold2); border: 1px solid rgba(232,184,75,0.2); }
+    .b-lang   { background: rgba(255,255,255,0.06); color: var(--muted); border: 1px solid var(--border); }
+    .b-rating { background: rgba(232,184,75,0.2); color: var(--gold); border: 1px solid rgba(232,184,75,0.3); }
+    .b-dur    { background: rgba(255,255,255,0.04); color: var(--muted); border: 1px solid var(--border); }
+    .movie-desc {
+      font-size: 0.95rem; line-height: 1.8;
+      color: #a09ea8; margin-bottom: 1rem;
+      max-width: 600px;
+    }
+    .release-date { font-size: 0.83rem; color: var(--muted); font-family: 'DM Mono', monospace; }
+
+    /* ── SECTION HEADER ─────────────────────────────────────── */
+    .section-header {
+      display: flex; align-items: center; gap: 1rem;
+      padding: clamp(1.5rem, 3vw, 2.5rem) clamp(1.5rem, 6vw, 6rem) 1rem;
+    }
+    .section-header h2 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.6rem; letter-spacing: 1.5px; color: var(--text);
+    }
+    .divider-line {
+      flex: 1; height: 1px;
+      background: linear-gradient(to right, rgba(232,184,75,0.3), transparent);
+    }
+
+    /* ── SHOWS LIST ─────────────────────────────────────────── */
+    #shows-list {
+      padding: 0 clamp(1.5rem, 6vw, 6rem) clamp(2rem, 4vw, 4rem);
+      display: flex; flex-direction: column; gap: 1rem;
+    }
+    .show-card {
+      display: flex; align-items: center; gap: 1.5rem;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.2rem 1.5rem;
+      transition: border-color 0.2s, transform 0.2s;
+      position: relative; overflow: hidden;
+    }
+    .show-card::before {
+      content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+      width: 3px;
+      background: linear-gradient(to bottom, var(--gold), transparent);
+      opacity: 0; transition: opacity 0.2s;
+    }
+    .show-card:hover { border-color: rgba(232,184,75,0.3); transform: translateY(-1px); }
+    .show-card:hover::before { opacity: 1; }
+    .show-icon {
+      font-size: 1.8rem;
+      width: 52px; height: 52px;
+      background: var(--bg3);
+      border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .show-info { flex: 1; }
+    .show-info h4 { font-size: 0.98rem; font-weight: 600; margin-bottom: 0.3rem; }
+    .show-info p { font-size: 0.85rem; color: var(--muted); margin-bottom: 0.15rem; }
+    .show-city { font-size: 0.78rem; color: var(--muted); font-family: 'DM Mono', monospace; opacity: 0.7; }
+    .show-right { display: flex; flex-direction: column; align-items: flex-end; gap: 0.6rem; flex-shrink: 0; }
+    .price-tag {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.5rem; letter-spacing: 1px; color: var(--gold);
+    }
+    .btn-book {
+      padding: 0.5rem 1.3rem;
+      background: linear-gradient(135deg, var(--gold), #c9933a);
+      color: #0a0a0c;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 700; font-size: 0.82rem;
+      letter-spacing: 0.05em; text-transform: uppercase;
+      border: none; border-radius: 999px; cursor: pointer;
+      transition: opacity 0.2s, transform 0.15s;
+    }
+    .btn-book:hover { opacity: 0.9; transform: scale(1.03); }
+
+    /* ── MODAL ──────────────────────────────────────────────── */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; z-index: 200;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(8px);
+      align-items: center; justify-content: center;
+      padding: 1rem;
+    }
+    .modal-overlay.open { display: flex; animation: fadeIn 0.2s ease; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .modal {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2rem;
+      width: 100%; max-width: 660px;
+      max-height: 90vh; overflow-y: auto;
+      position: relative;
+      box-shadow: var(--shadow);
+      animation: slideUp 0.25s ease;
+    }
+    @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .modal-close {
+      position: absolute; top: 1rem; right: 1rem;
+      background: var(--bg3); border: 1px solid var(--border);
+      color: var(--muted); font-size: 1.2rem;
+      width: 32px; height: 32px; border-radius: 50%;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .modal-close:hover { color: var(--text); border-color: var(--gold); }
+    .modal h2 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.4rem; letter-spacing: 1px; margin-bottom: 1.5rem;
+      padding-right: 2rem;
+    }
+
+    /* screen */
+    .screen-wrap { text-align: center; margin-bottom: 1.5rem; }
+    .screen-label {
+      font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 0.4rem;
+    }
+    .screen-bar {
+      width: 70%; margin: 0 auto;
+      height: 4px;
+      background: linear-gradient(to right, transparent, var(--gold), transparent);
+      border-radius: 4px;
+      box-shadow: 0 0 14px rgba(232,184,75,0.4);
+    }
+
+    /* seat map */
+    .seat-map { display: flex; flex-direction: column; gap: 0.5rem; align-items: center; }
+    .seat-row { display: flex; align-items: center; gap: 0.4rem; }
+    .seat-row-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.72rem; color: var(--muted);
+      width: 20px; text-align: right; flex-shrink: 0;
+    }
+    .seat {
+      width: 30px; height: 28px; border-radius: 6px 6px 3px 3px;
+      font-size: 0.68rem; font-family: 'DM Mono', monospace;
+      display: flex; align-items: center; justify-content: center;
+      cursor: default; transition: transform 0.15s, background 0.15s;
+      border: none;
+    }
+    .seat.available {
+      background: var(--bg3);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: var(--muted); cursor: pointer;
+    }
+    .seat.available:hover { background: rgba(232,184,75,0.15); border-color: var(--gold); transform: scale(1.1); }
+    .seat.selected {
+      background: linear-gradient(135deg, var(--gold), #c9933a);
+      color: #0a0a0c; font-weight: 700;
+      transform: scale(1.08);
+    }
+    .seat.booked {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.05);
+      color: rgba(255,255,255,0.12);
+    }
+    .seat.vip.available     { border-color: rgba(168,85,247,0.4); color: #c084fc; }
+    .seat.vip.available:hover { background: rgba(168,85,247,0.15); }
+    .seat.premium.available { border-color: rgba(232,184,75,0.4); color: var(--gold2); }
+
+    /* legend */
+    .seat-legend {
+      display: flex; gap: 1.5rem; justify-content: center;
+      margin-top: 1.2rem; flex-wrap: wrap;
+    }
+    .seat-legend-item {
+      display: flex; align-items: center; gap: 0.4rem;
+      font-size: 0.78rem; color: var(--muted);
+    }
+    .seat-legend-box {
+      width: 18px; height: 16px; border-radius: 4px 4px 2px 2px;
+    }
+
+    /* summary */
+    .booking-summary {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 1.2rem 1.4rem;
+      margin-top: 1.5rem;
+    }
+    .booking-summary h3 {
+      font-size: 0.75rem; letter-spacing: 0.15em; text-transform: uppercase;
+      color: var(--gold); margin-bottom: 0.8rem; font-weight: 600;
+    }
+    .summary-row {
+      display: flex; justify-content: space-between;
+      font-size: 0.9rem; padding: 0.35rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .summary-row:last-child { border-bottom: none; font-weight: 700; color: var(--gold); }
+    .summary-row span:first-child { color: var(--muted); }
+
+    /* confirm btn */
+    .btn-confirm {
+      margin-top: 1.2rem; width: 100%;
+      padding: 0.9rem;
+      background: linear-gradient(135deg, var(--gold), #c9933a);
+      color: #0a0a0c; font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.1rem; letter-spacing: 2px;
+      border: none; border-radius: var(--radius-sm); cursor: pointer;
+      transition: opacity 0.2s, transform 0.15s;
+    }
+    .btn-confirm:disabled {
+      background: var(--bg3); color: var(--muted);
+      border: 1px solid var(--border); cursor: not-allowed;
+      transform: none; opacity: 0.7;
+    }
+    .btn-confirm:not(:disabled):hover { opacity: 0.9; transform: translateY(-1px); }
+
+    /* ── STATES ─────────────────────────────────────────────── */
+    .spinner-wrap { display: flex; align-items: center; justify-content: center; padding: 3rem; }
+    .spinner {
+      width: 36px; height: 36px;
+      border: 3px solid var(--bg3);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .empty-state {
+      display: flex; align-items: center; justify-content: center;
+      padding: 3rem; color: var(--muted); font-size: 0.9rem;
+    }
+
+    /* ── TOAST ──────────────────────────────────────────────── */
+    .toast {
+      position: fixed; bottom: 2rem; right: 2rem; z-index: 999;
+      padding: 0.85rem 1.4rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.9rem; font-weight: 500;
+      animation: slideIn 0.3s ease, fadeOut 0.4s ease 2.6s forwards;
+      pointer-events: none;
+    }
+    .toast.success { background: #14532d; color: #86efac; border: 1px solid #166534; }
+    .toast.error   { background: #450a0a; color: #fca5a5; border: 1px solid #7f1d1d; }
+    @keyframes slideIn  { from { transform: translateX(120%); } to { transform: translateX(0); } }
+    @keyframes fadeOut  { to { opacity: 0; } }
+
+    /* ── SCROLLBAR ──────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--bg3); border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav class="navbar">
+    <a href="../index.html" class="logo">Book<span>My</span>Show</a>
+    <div class="nav-links">
+      <a href="../index.html">Home</a>
+      <a href="movies.html" class="active">Movies</a>
+      <a href="theaters.html">Theaters</a>
+      <a href="bookings.html">My Bookings</a>
+    </div>
+    <div id="nav-user"></div>
+  </nav>
+
+  <!-- MOVIE HERO -->
+  <section id="movie-hero">
+    <div class="hero-inner" id="movie-detail">
+      <div class="spinner-wrap"><div class="spinner"></div></div>
+    </div>
+  </section>
+
+  <!-- SHOWS -->
+  <div class="section-header">
+    <h2>Available Shows</h2>
+    <div class="divider-line"></div>
+  </div>
+  <div id="shows-list"></div>
+
+  <!-- SEAT MODAL -->
+  <div class="modal-overlay" id="seat-modal">
+    <div class="modal">
+      <button class="modal-close" onclick="closeModal('seat-modal')">✕</button>
+      <h2 id="seat-modal-title">Select Seats</h2>
+
+      <div class="screen-wrap">
+        <div class="screen-label">Screen</div>
+        <div class="screen-bar"></div>
+      </div>
+
+      <div class="seat-map" id="seat-map"></div>
+
+      <div class="seat-legend">
+        <div class="seat-legend-item">
+          <div class="seat-legend-box" style="background:var(--bg3);border:1px solid rgba(255,255,255,0.12);"></div>
+          Available
+        </div>
+        <div class="seat-legend-item">
+          <div class="seat-legend-box" style="background:linear-gradient(135deg,#e8b84b,#c9933a);"></div>
+          Selected
+        </div>
+        <div class="seat-legend-item">
+          <div class="seat-legend-box" style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.05);"></div>
+          Booked
+        </div>
+        <div class="seat-legend-item">
+          <div class="seat-legend-box" style="background:var(--bg3);border:1px solid rgba(168,85,247,0.4);"></div>
+          VIP
+        </div>
+      </div>
+
+      <div class="booking-summary" id="booking-summary" style="display:none;">
+        <h3>Booking Summary</h3>
+        <div id="summary-content"></div>
+      </div>
+
+      <button class="btn-confirm" id="confirm-btn" onclick="confirmBooking()" disabled>
+        Confirm Booking
+      </button>
+    </div>
+  </div>
+
+  <script src="../js/api.js"></script>
+  <script src="../js/utils.js"></script>
+  <script>
+    const params       = new URLSearchParams(window.location.search);
+    const movieId      = params.get('id');
+    let currentShow    = null;
+    let selectedSeatIds = [];
+    let availableSeats  = [];
+
+    /* ── helpers ── */
+    function showToast(msg, type = 'success') {
+      const t = document.createElement('div');
+      t.className = `toast ${type}`;
+      t.textContent = msg;
+      document.body.appendChild(t);
+      setTimeout(() => t.remove(), 3100);
+    }
+    function openModal(id)  { document.getElementById(id).classList.add('open'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+    /* ── load movie ── */
+    async function loadMovie() {
+      if (!movieId) { showToast('No movie ID', 'error'); return; }
+      try {
+        const movie = await MovieAPI.getById(movieId);
+        document.title = `${movie.title} — BookMyShow`;
+        document.getElementById('movie-detail').innerHTML = `
+          <div class="poster-wrap">
+            <img src="${movie.poster_url || '../assets/default-movie.png'}"
+                 alt="${movie.title}"
+                 onerror="this.src='../assets/default-movie.png'" />
+          </div>
+          <div class="movie-meta">
+            <h1>${movie.title}</h1>
+            <div class="badge-row">
+              ${movie.genre            ? `<span class="badge b-genre">🎭 ${movie.genre}</span>` : ''}
+              ${movie.language         ? `<span class="badge b-lang">🗣 ${movie.language}</span>` : ''}
+              ${movie.rating           ? `<span class="badge b-rating">⭐ ${movie.rating}</span>` : ''}
+              ${movie.duration_minutes ? `<span class="badge b-dur">⏱ ${movie.duration_minutes} min</span>` : ''}
+            </div>
+            <p class="movie-desc">${movie.description || 'No description available.'}</p>
+            ${movie.release_date ? `<p class="release-date">📅 Released: ${movie.release_date}</p>` : ''}
+          </div>
+        `;
+        loadShows();
+      } catch (e) {
+        document.getElementById('movie-detail').innerHTML =
+          '<div class="empty-state">Movie not found.</div>';
+      }
+    }
+
+    /* ── load shows ── */
+    async function loadShows() {
+      document.getElementById('shows-list').innerHTML =
+        '<div class="spinner-wrap"><div class="spinner"></div></div>';
+      try {
+        const shows = await ShowAPI.getByMovie(movieId);
+        if (!shows.length) {
+          document.getElementById('shows-list').innerHTML =
+            '<div class="empty-state">No shows available for this movie.</div>';
+          return;
+        }
+        document.getElementById('shows-list').innerHTML = shows.map(s => `
+          <div class="show-card">
+            <div class="show-icon">🎬</div>
+            <div class="show-info">
+              <h4>${s.screen?.theater?.name || 'Theater'} — ${s.screen?.name || 'Screen'}</h4>
+              <!-- FIX: showDate (not release_date), start_time (not startTime) -->
+              <p>📅 ${s.showDate || s.show_date || ''} &nbsp; 🕐 ${s.start_time || ''}${s.end_time ? ' – ' + s.end_time : ''}</p>
+              <p class="show-city">${s.screen?.theater?.city?.name || ''}</p>
+            </div>
+            <div class="show-right">
+              <!-- FIX: ticket_price (not total_price) -->
+              <div class="price-tag">₹${s.ticket_price ?? 0}</div>
+              <button class="btn-book" onclick='selectShow(${JSON.stringify(s)})'>Select Seats</button>
+            </div>
+          </div>
+        `).join('');
+      } catch (e) {
+        document.getElementById('shows-list').innerHTML =
+          '<div class="empty-state">Could not load shows.</div>';
+      }
+    }
+
+    /* ── select show → open seat modal ── */
+    async function selectShow(show) {
+      const user = getLoggedInUser();
+      if (!user) {
+        showToast('Please login to book tickets', 'error');
+        setTimeout(() => window.location.href = 'login.html', 1000);
+        return;
+      }
+      currentShow       = show;
+      selectedSeatIds   = [];
+
+      // FIX: show.start_time (not show.startTime)
+      document.getElementById('seat-modal-title').textContent =
+        `${show.screen?.name || 'Screen'} — ${show.showDate || show.show_date || ''} ${show.start_time || ''}`;
+      openModal('seat-modal');
+      document.getElementById('seat-map').innerHTML =
+        '<div class="spinner-wrap"><div class="spinner"></div></div>';
+
+      try {
+        const [allSeats, available] = await Promise.all([
+          SeatAPI.getByScreen(show.screen.id),
+          BookingAPI.getAvailableSeats(show.id)
+        ]);
+        availableSeats = available;
+        const availableIds = new Set(available.map(s => s.id));
+
+        // group by row — FIX: seat.rows (not seat.row), seat.seat_number (not seat.seatNumber)
+        const rowsMap = {};
+        allSeats.forEach(seat => {
+          const r = seat.rows || seat.seat_number?.charAt(0) || '?';
+          if (!rowsMap[r]) rowsMap[r] = [];
+          rowsMap[r].push(seat);
+        });
+
+        const mapEl = document.getElementById('seat-map');
+        mapEl.innerHTML = '';
+
+        Object.keys(rowsMap).sort().forEach(row => {
+          const rowDiv = document.createElement('div');
+          rowDiv.className = 'seat-row';
+          rowDiv.innerHTML = `<div class="seat-row-label">${row}</div>`;
+
+          // FIX: seat.columns (not seat.col), seat.seat_number (not seat.seatNumber), seat.seat_type (not seat.seatType)
+          rowsMap[row]
+            .sort((a, b) => (a.columns || 0) - (b.columns || 0))
+            .forEach(seat => {
+              const isAvail = availableIds.has(seat.id);
+              const seatDiv = document.createElement('div');
+
+              let typeClass = '';
+              const st = seat.seat_type || '';
+              if (st === 'VIP')     typeClass = ' vip';
+              else if (st === 'PREMIUM') typeClass = ' premium';
+
+              seatDiv.className = `seat ${isAvail ? 'available' : 'booked'}${typeClass}`;
+              seatDiv.textContent = seat.columns ?? seat.seat_number;
+              seatDiv.dataset.id  = seat.id;
+              if (isAvail) seatDiv.onclick = () => toggleSeat(seatDiv, seat);
+
+              rowDiv.appendChild(seatDiv);
+            });
+          mapEl.appendChild(rowDiv);
+        });
+
+        updateSummary();
+      } catch (e) {
+        document.getElementById('seat-map').innerHTML =
+          '<div class="empty-state">Could not load seats.</div>';
+      }
+    }
+
+    /* ── toggle seat selection ── */
+    function toggleSeat(el, seat) {
+      const idx = selectedSeatIds.indexOf(seat.id);
+      if (idx > -1) {
+        selectedSeatIds.splice(idx, 1);
+        el.classList.replace('selected', 'available');
+      } else {
+        selectedSeatIds.push(seat.id);
+        el.classList.replace('available', 'selected');
+      }
+      updateSummary();
+    }
+
+    /* ── update summary panel ── */
+    function updateSummary() {
+      const summaryDiv = document.getElementById('booking-summary');
+      const contentDiv = document.getElementById('summary-content');
+      const confirmBtn = document.getElementById('confirm-btn');
+
+      if (!selectedSeatIds.length) {
+        summaryDiv.style.display = 'none';
+        confirmBtn.disabled = true;
+        return;
+      }
+
+      // FIX: ticket_price (not total_price)
+      const pricePerSeat = currentShow.ticket_price ?? 0;
+      const total        = selectedSeatIds.length * pricePerSeat;
+
+      summaryDiv.style.display = 'block';
+      confirmBtn.disabled = false;
+      contentDiv.innerHTML = `
+        <div class="summary-row"><span>Seats selected</span><span>${selectedSeatIds.length}</span></div>
+        <div class="summary-row"><span>Price per ticket</span><span>₹${pricePerSeat}</span></div>
+        <div class="summary-row"><span>Total Amount</span><span>₹${total}</span></div>
+      `;
+    }
+
+    /* ── confirm booking ── */
+    async function confirmBooking() {
+      const user = getLoggedInUser();
+      if (!user)                    { showToast('Please login', 'error'); return; }
+      if (!selectedSeatIds.length)  { showToast('Select at least one seat', 'error'); return; }
+
+      try {
+        await BookingAPI.create({
+          userId:  user.id,
+          showId:  currentShow.id,
+          seatIds: selectedSeatIds
+        });
+        showToast('🎉 Booking confirmed!', 'success');
+        closeModal('seat-modal');
+        setTimeout(() => window.location.href = 'bookings.html', 1500);
+      } catch (e) {
+        showToast(e.message || 'Booking failed', 'error');
+      }
+    }
+
+    // kick off
+    loadMovie();
+  </script>
+</body>
+</html>
