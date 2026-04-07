@@ -6,10 +6,15 @@ Backend uses Spring Data JPA with MySQL, structured with clean Controller-Servic
 
 ✨ Key Highlights
 🔐 Secure Authentication – User registration & login with Spring Security
+
 🎥 Movie Exploration – Browse movies with detailed information
+
 🕒 Smart Show Scheduling – View shows across multiple screens & timings
+
 🎟️ Interactive Seat Selection – Real-time seat booking experience
+
 📦 Booking Management – Book, view, and cancel tickets seamlessly
+
 👨‍💼 Admin Controls – Manage movies, shows, and theatre data
 
 🧠 Architecture & Design
@@ -21,9 +26,13 @@ RESTful API design principles
 Proper separation of concerns for maintainability
 
 🛠️ Tech Stack
+
 Backend: Java, Spring Boot, Spring Security, Spring Data JPA
+
 Frontend: HTML, CSS, Vanilla JavaScript
+
 Database: MySQL
+
 Tools: Maven, Git, Postman
 
 🎯 Objective
